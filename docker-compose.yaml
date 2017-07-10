@@ -1,0 +1,163 @@
+# Copyright (c) 2000-2017, Board of Trustees of Leland Stanford Jr. University
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification,
+# are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+version: '2'
+
+services:
+    laaws-demo:
+        build: 
+            context: ./laaws-demo
+        image: lockss/laaws-demo
+        links:
+            - laaws-openwayback:openwayback
+            - laaws-mdq:laaws-mdq
+        ports:
+            - "80:80"
+
+    laaws-lockss:
+        build:
+            context: ./laaws-lockss
+        image: lockss/laaws-lockss
+        ports:
+            - "8081:8081"
+            - "9729:9729"
+        volumes:
+            - laaws-lockss:/cache0
+            #- ./laaws-lockss/log/lockss:/var/log/lockss
+            #- ./laaws-lockss/lockss:/opt/lockss
+
+    laaws-mdq:
+        build: 
+            context: ./laaws-mdq
+        image: lockss/laaws-mdq
+        links:
+            - laaws-lockss:lockss-daemon
+            - metadata-pgsql:postgres
+        ports:
+            - "8082:8889"
+#        volumes:
+#            - metadatadb:/laaws-metadataservice/cache/db
+
+    laaws-mdx:
+        build: 
+            context: ./laaws-mdx
+        image: lockss/laaws-mdx
+        links:
+            - laaws-lockss:lockss-daemon
+            - metadata-pgsql:postgres
+        ports:
+            - "8083:8888"
+#        volumes:
+#            - metadatadb:/laaws-metadataextractor/cache/db
+
+    laaws-openwayback:
+        build:
+            context: ./laaws-openwayback
+        image: lockss/laaws-openwayback
+        ports:
+            - "8080:8080"
+        volumes:
+            - ./laaws-openwayback/openwayback:/srv/openwayback
+
+    lockss-solr:
+        image: solr
+        container_name: lockss-solr
+        ports:
+            - "8983:8983"
+        volumes:
+            - test-core:/opt/solr/server/solr/test-core
+        entrypoint:
+            - docker-entrypoint.sh
+            - solr-precreate
+            - test-core
+
+    lockss-indexer:
+        build:
+            context: ./lockss-solr
+        image: lockss/lockss-indexer
+        environment:
+            - LOCKSS_SOLR_WATCHDIR=/warcs
+            - LOCKSS_SOLR_URL=http://lockss-solr:8983/solr/test-core
+        links:
+            - lockss-solr
+        volumes:
+            - ./warcs:/warcs
+
+    metadata-pgsql:
+        image: postgres
+        container_name: metadata-pgsql
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_PASSWORD=dontCareItsADemo
+            - POSTGRES_USER=LOCKSS
+            - POSTGRES_DB=MetadataDbManager
+        volumes:
+            - postgresql-data:/var/lib/postgresql/data
+
+    repo-solr:
+        image: solr
+        ports:
+            - "8984:8983"
+        entrypoint:
+            - docker-entrypoint.sh
+            - solr-precreate
+            - xyzzy
+    
+    repo-hdfs:
+        build:
+            context: laaws-dev-hdfs
+        image: laaws/laaws-dev-hdfs
+        hostname: repo-hdfs
+        ports:
+            - "9000:9000"
+            - "50010:50010"
+            - "50020:50020"
+            - "50070:50070"
+            - "50075:50075"
+
+    repo:
+        build:
+            context: laaws-repository
+        image: laaws/laaws-repository
+        links:
+            - repo-hdfs
+            - repo-solr
+        ports:
+            - "8700:8080"
+        
+# Define named Docker volumes
+volumes:
+    laaws-lockss:
+        external: false
+    test-core:
+        external: false
+#    metadatadb:
+#        external: false
+    postgresql-data:
+        external: false

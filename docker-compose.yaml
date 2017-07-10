@@ -29,16 +29,6 @@
 version: '2'
 
 services:
-    laaws-demo:
-        build: 
-            context: ./laaws-demo
-        image: lockss/laaws-demo
-        links:
-            - laaws-openwayback:openwayback
-            - laaws-metadataservice:laaws-metadataservice
-        ports:
-            - "80:80"
-
     laaws-metadataservice:
         build: 
             context: ./laaws-metadataservice

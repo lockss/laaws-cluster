@@ -35,45 +35,27 @@ services:
         image: lockss/laaws-demo
         links:
             - laaws-openwayback:openwayback
-            - laaws-mdq:laaws-mdq
+            - laaws-metadataservice:laaws-metadataservice
         ports:
             - "80:80"
 
-    laaws-lockss:
-        build:
-            context: ./laaws-lockss
-        image: lockss/laaws-lockss
-        ports:
-            - "8081:8081"
-            - "9729:9729"
-        volumes:
-            - laaws-lockss:/cache0
-            #- ./laaws-lockss/log/lockss:/var/log/lockss
-            #- ./laaws-lockss/lockss:/opt/lockss
-
-    laaws-mdq:
+    laaws-metadataservice:
         build: 
-            context: ./laaws-mdq
-        image: lockss/laaws-mdq
+            context: ./laaws-metadataservice
+        image: laaws/laaws-metadataservice
         links:
-            - laaws-lockss:lockss-daemon
-            - metadata-pgsql:postgres
+            - laaws-metadata-pgsql:postgres
         ports:
             - "8082:8889"
-#        volumes:
-#            - metadatadb:/laaws-metadataservice/cache/db
 
-    laaws-mdx:
+    laaws-metadataextractor:
         build: 
-            context: ./laaws-mdx
-        image: lockss/laaws-mdx
+            context: ./laaws-metadataextractor
+        image: laaws/laaws-metadataextractor
         links:
-            - laaws-lockss:lockss-daemon
-            - metadata-pgsql:postgres
+            - laaws-metadata-pgsql:postgres
         ports:
             - "8083:8888"
-#        volumes:
-#            - metadatadb:/laaws-metadataextractor/cache/db
 
     laaws-openwayback:
         build:
@@ -84,43 +66,41 @@ services:
         volumes:
             - ./laaws-openwayback/openwayback:/srv/openwayback
 
-    lockss-solr:
+    laaws-metadata-solr:
         image: solr
-        container_name: lockss-solr
         ports:
             - "8983:8983"
-        volumes:
-            - test-core:/opt/solr/server/solr/test-core
+        #volumes:
+        #    - test-core:/opt/solr/server/solr/test-core
         entrypoint:
             - docker-entrypoint.sh
             - solr-precreate
             - test-core
 
-    lockss-indexer:
+    lockss-solr-indexer:
         build:
             context: ./lockss-solr
-        image: lockss/lockss-indexer
+        image: laaws/lockss-solr
         environment:
             - LOCKSS_SOLR_WATCHDIR=/warcs
-            - LOCKSS_SOLR_URL=http://lockss-solr:8983/solr/test-core
+            - LOCKSS_SOLR_URL=http://lockss-metadata-solr:8983/solr/test-core
         links:
-            - lockss-solr
+            - laaws-metadata-solr
         volumes:
             - ./warcs:/warcs
 
-    metadata-pgsql:
+    laaws-metadata-pgsql:
         image: postgres
-        container_name: metadata-pgsql
         ports:
             - "5432:5432"
         environment:
             - POSTGRES_PASSWORD=dontCareItsADemo
             - POSTGRES_USER=LOCKSS
             - POSTGRES_DB=MetadataDbManager
-        volumes:
-            - postgresql-data:/var/lib/postgresql/data
+        #volumes:
+        #    - laaws-metadata-pgsql-data:/var/lib/postgresql/data
 
-    repo-solr:
+    laaws-repo-solr:
         image: solr
         ports:
             - "8984:8983"
@@ -129,11 +109,11 @@ services:
             - solr-precreate
             - xyzzy
     
-    repo-hdfs:
+    laaws-repo-hdfs:
         build:
             context: laaws-dev-hdfs
         image: laaws/laaws-dev-hdfs
-        hostname: repo-hdfs
+        hostname: laaws-repo-hdfs
         ports:
             - "9000:9000"
             - "50010:50010"
@@ -141,23 +121,19 @@ services:
             - "50070:50070"
             - "50075:50075"
 
-    repo:
+    laaws-repo:
         build:
             context: laaws-repository
         image: laaws/laaws-repository
         links:
-            - repo-hdfs
-            - repo-solr
+            - laaws-repo-hdfs
+            - laaws-repo-solr
         ports:
             - "8700:8080"
         
 # Define named Docker volumes
 volumes:
-    laaws-lockss:
-        external: false
     test-core:
         external: false
-#    metadatadb:
-#        external: false
-    postgresql-data:
+    laaws-metadata-pgsql-data:
         external: false

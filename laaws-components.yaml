@@ -52,7 +52,7 @@ services:
         volumes:
             - ./laaws-openwayback/openwayback:/srv/openwayback
 
-    laaws-metadata-solr:
+    laaws-indexer-solr:
         image: solr
         ports:
             - "8983:8983"
@@ -63,10 +63,10 @@ services:
             - solr-precreate
             - test-core
 
-    laaws-solr-indexer:
+    laaws-indexer:
         build:
             context: ./lockss-solr
-        image: laaws/lockss-solr
+        image: laaws/laaws-indexer
         environment:
             - LOCKSS_SOLR_WATCHDIR=/warcs
             - LOCKSS_SOLR_URL=http://lockss-metadata-solr:8983/solr/test-core

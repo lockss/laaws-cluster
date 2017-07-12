@@ -1,0 +1,120 @@
+# Copyright (c) 2000-2017, Board of Trustees of Leland Stanford Jr. University
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification,
+# are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+# list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+# this list of conditions and the following disclaimer in the documentation and/or
+# other materials provided with the distribution.
+#
+# 3. Neither the name of the copyright holder nor the names of its contributors
+# may be used to endorse or promote products derived from this software without
+# specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+# ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+version: '2'
+
+services:
+    laaws-metadataservice:
+        build: 
+            context: ./laaws-metadataservice
+        image: laaws/laaws-metadataservice
+        ports:
+            - "8082:8889"
+
+    laaws-metadataextractor:
+        build: 
+            context: ./laaws-metadataextractor
+        image: laaws/laaws-metadataextractor
+        ports:
+            - "8083:8888"
+
+    laaws-openwayback:
+        build:
+            context: ./laaws-openwayback
+        image: lockss/laaws-openwayback
+        ports:
+            - "8080:8080"
+        volumes:
+            - ./laaws-openwayback/openwayback:/srv/openwayback
+
+    laaws-metadata-solr:
+        image: solr
+        ports:
+            - "8983:8983"
+        #volumes:
+        #    - test-core:/opt/solr/server/solr/test-core
+        entrypoint:
+            - docker-entrypoint.sh
+            - solr-precreate
+            - test-core
+
+    laaws-solr-indexer:
+        build:
+            context: ./lockss-solr
+        image: laaws/lockss-solr
+        environment:
+            - LOCKSS_SOLR_WATCHDIR=/warcs
+            - LOCKSS_SOLR_URL=http://lockss-metadata-solr:8983/solr/test-core
+        volumes:
+            - ./warcs:/warcs
+
+    laaws-metadata-pgsql:
+        image: postgres
+        ports:
+            - "5432:5432"
+        environment:
+            - POSTGRES_PASSWORD=dontCareItsADemo
+            - POSTGRES_USER=LOCKSS
+            - POSTGRES_DB=MetadataDbManager
+        #volumes:
+        #    - laaws-metadata-pgsql-data:/var/lib/postgresql/data
+
+    laaws-repo-solr:
+        image: solr
+        ports:
+            - "8984:8983"
+        entrypoint:
+            - docker-entrypoint.sh
+            - solr-precreate
+            - xyzzy
+    
+    laaws-repo-hdfs:
+        build:
+            context: laaws-dev-hdfs
+        image: laaws/laaws-dev-hdfs
+        hostname: laaws-repo-hdfs
+        ports:
+            - "9000:9000"
+            - "50010:50010"
+            - "50020:50020"
+            - "50070:50070"
+            - "50075:50075"
+
+    laaws-repo:
+        build:
+            context: laaws-repository
+        image: laaws/laaws-repository
+        ports:
+            - "8700:8080"
+        
+# Define named Docker volumes
+volumes:
+    test-core:
+        external: false
+    laaws-metadata-pgsql-data:
+        external: false

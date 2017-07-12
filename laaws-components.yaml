@@ -56,8 +56,6 @@ services:
         image: solr
         ports:
             - "8983:8983"
-        #volumes:
-        #    - test-core:/opt/solr/server/solr/test-core
         entrypoint:
             - docker-entrypoint.sh
             - solr-precreate
@@ -81,8 +79,6 @@ services:
             - POSTGRES_PASSWORD=dontCareItsADemo
             - POSTGRES_USER=LOCKSS
             - POSTGRES_DB=MetadataDbManager
-        #volumes:
-        #    - laaws-metadata-pgsql-data:/var/lib/postgresql/data
 
     laaws-repo-solr:
         image: solr
@@ -111,10 +107,3 @@ services:
         image: laaws/laaws-repository
         ports:
             - "8700:8080"
-        
-# Define named Docker volumes
-volumes:
-    test-core:
-        external: false
-    laaws-metadata-pgsql-data:
-        external: false

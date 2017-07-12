@@ -1,18 +1,18 @@
 [submodule "laaws-metadataextractor"]
 	path = laaws-metadataextractor
-	url = https://gitlab.lockss.org/laaws/laaws-metadataextractor.git
+	url = git@gitlab.lockss.org:laaws/laaws-metadataextractor
 [submodule "laaws-metadataservice"]
 	path = laaws-metadataservice
-	url = https://gitlab.lockss.org/laaws/laaws-metadataservice.git
+	url = git@gitlab.lockss.org:laaws/laaws-metadataservice
 [submodule "laaws-dev-hdfs"]
 	path = laaws-dev-hdfs
-	url = https://gitlab.lockss.org/laaws/laaws-dev-hdfs.git
+	url = git@gitlab.lockss.org:laaws/laaws-dev-hdfs
 [submodule "laaws-repository"]
 	path = laaws-repository
-	url = https://gitlab.lockss.org/laaws/laaws-repository.git
+	url = git@gitlab.lockss.org:laaws/laaws-repository
 [submodule "laaws-openwayback"]
 	path = laaws-openwayback
-	url = https://gitlab.lockss.org/laaws/laaws-openwayback.git
+	url = git@gitlab.lockss.org:laaws/laaws-openwayback
 [submodule "lockss-solr"]
 	path = lockss-solr
 	url = https://github.com/edina/lockss-solr.git

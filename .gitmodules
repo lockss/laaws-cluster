@@ -1,9 +1,11 @@
 [submodule "laaws-metadataextractor"]
 	path = laaws-metadataextractor
 	url = git@gitlab.lockss.org:laaws/laaws-metadataextractor
+        branch = demo-2017-07
 [submodule "laaws-metadataservice"]
 	path = laaws-metadataservice
 	url = git@gitlab.lockss.org:laaws/laaws-metadataservice
+        branch = demo-2017-07
 [submodule "laaws-dev-hdfs"]
 	path = laaws-dev-hdfs
 	url = git@gitlab.lockss.org:laaws/laaws-dev-hdfs
